@@ -1,20 +1,22 @@
-import type { Providers, Resolved } from "./Providers";
+import type { Provider, ProviderParam, Providers, Resolved } from "./Providers";
 import { resolved } from "./resolved";
 import { verifyDependencies } from "./verifyDependencies";
 
 export type AllProviderDependencies<
-  D extends Record<string, (arg: any) => any>
+  D extends Record<string, Provider>
 > = UnionToIntersection<
   {
     [P in keyof D]: ProviderDependencies<D[P]>;
   }[keyof D]
 >;
 
-export type ProviderDependencies<F> = F extends () => any
-  ? {}
-  : F extends (arg: infer A) => any
-  ? A
-  : never;
+// prettier-ignore
+export type ProviderDependencies<F> =
+  F extends () => any ? {} :
+  F extends new () => any ? {} :
+  F extends (arg: infer A) => any ? A :
+  F extends new (arg: infer A) => any ? A :
+  never;
 
 type UnionToIntersection<Union> = (
   Union extends any ? (u: Union) => void : never
@@ -44,5 +46,5 @@ export type FullyResolved<D extends Providers> = {
 };
 
 export type ProviderParams<P extends Providers, K> = K extends keyof P
-  ? Parameters<P[K]>
+  ? [deps: ProviderParam<P[K]>]
   : [deps: unknown];

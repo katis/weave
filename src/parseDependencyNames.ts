@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+import { isClassProvider, type Provider } from "./Providers";
+
 const filterOutComments = (str: string): string => {
   const result: string[] = [];
   let commentState: "none" | "singleline" | "multiline" = "none";
@@ -59,13 +61,30 @@ const splitByComma = (str: string) => {
   return result;
 };
 
-export const parseDependencyNames = (fn: (deps: object) => any): string[] => {
+const extractConstructorParams = (classText: string): string => {
+  const constructorMatch = classText.match(/constructor\s*\(([^)]*)\)/);
+  if (!constructorMatch) throw Error("No constructor found in class");
+  return constructorMatch[1].trim();
+};
+
+export const parseDependencyNames = (fn: Provider): string[] => {
+  const isClass = isClassProvider(fn);
   const text = filterOutComments(fn.toString());
-  const match = text.match(/(?:async)?(?:\s+function)?[^(]*\(([^)]*)/);
-  if (!match) return [];
-  const trimmedParams = match[1].trim();
-  if (!trimmedParams) return [];
-  const [firstParam] = splitByComma(trimmedParams);
+
+  let paramsText: string;
+  if (isClass) {
+    // For class, extract constructor parameters
+    paramsText = extractConstructorParams(text);
+  } else {
+    // For regular function
+    const match = text.match(/(?:async)?(?:\s+function)?[^(]*\(([^)]*)/);
+    if (!match) return [];
+    paramsText = match[1].trim();
+  }
+
+  if (!paramsText) return [];
+
+  const [firstParam] = splitByComma(paramsText);
   if (firstParam[0] !== "{" || firstParam[firstParam.length - 1] !== "}") {
     throw Error(
       "First argument must use the object destructuring pattern: " + firstParam

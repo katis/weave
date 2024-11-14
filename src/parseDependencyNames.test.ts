@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { parseDependencyNames } from "./parseDependencyNames";
+import { Provider } from "./Providers";
 
 describe("parseDependencyNames", () => {
   const depNames = ["a", "b", "c", "d"];
@@ -15,6 +16,16 @@ describe("parseDependencyNames", () => {
     }
     expect(parseDependencyNames(named)).toEqual(depNames);
   });
+
+  it('should parse constructor deps', () => {
+    class Constructor extends Provider()
+    {
+      constructor({ a, b, c, d: DD }: any) {
+        super()
+      }
+    }
+    expect(parseDependencyNames(Constructor)).toEqual(depNames);
+  })
 
   it("should parse anonymous function deps", () => {
     let anonymousFn = (() =>

@@ -1,4 +1,4 @@
-# `@katis/weave` - Functional dependency injection for TypeScript
+# `@katis/weave` - Type Safe Dependency Injection for TypeScript
 
 ## Overview
 
@@ -26,22 +26,22 @@ yarn add @katis/weave
 
 ### Defining Providers
 
-Providers are functions that optionally take a single argument defining the dependencies required by the returned value.
+Providers are functions or class constructors that optionally take a single argument defining the dependencies required by the returned value.
 The provider argument MUST use destructuring syntax, as the argument is used to analyze the dependency graph for circular and missing dependencies at runtime.
 
 Example:
 
 ```typescript
 type Deps = {
-  itemsPath: string;
-  readItems: (itemsPath: string) => Promise<string[]>;
+  dirPath: string;
+  readItems: (dirPath: string) => Promise<string[]>;
 };
 // getItems is a function that first takes it's dependencies as an argument and
 // then returns a function that uses those dependencies to read items from a path.
 export const getItems =
-  ({ itemsPath, readItems }: Deps) =>
+  ({ dirPath, readItems }: Deps) =>
   () => {
-    readItems(itemsPath);
+    readItems(dirPath);
   };
 ```
 
@@ -52,19 +52,34 @@ The `weave` function takes an object of providers and resolves their dependencie
 Example:
 
 ```ts
-import { weave } from "@katis/weave";
-import { getItems } from "./getItems";
+import { weave, Provider } from "@katis/weave";
 import fs from "fs/promises";
 
-const readItems =
-  () =>
-  async (path: string): string[] =>
-    JSON.parse(await fs.readFile(path, "utf8"));
+type FileManagerDeps = {
+  dirPath: string;
+};
+
+// Classes need to extend Provider() or Provider(BaseClass) to be compatible with weave
+class FileManager extends Provider() {
+  constructor({ dirPath }: FileManagerDeps) {}
+
+  readFile(fileName: string) {
+    return fs.readFile(`${dirPath}/${fileName}`, "utf-8");
+  }
+}
+
+type ReadConfigDeps = {
+  fileManager: FileManager;
+};
+
+const readConfig =
+  ({ fileManager }: ReadConfigDeps) =>
+  () => fileManager.readFile('config.json');
 
 const providers = {
-  itemsPath: (): string => process.env.ITEMS_PATH!,
-  readItems,
-  getItems,
+  dirPath: './config'
+  fileManager: FileManager,
+  readConfig,
 };
 
 const dependencyGraph = weave(providers);
