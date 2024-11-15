@@ -1,6 +1,6 @@
 {
   "name": "@katis/weave",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Simple functional dependency injection",
   "repository": "github:katis/weave",
   "exports": {
