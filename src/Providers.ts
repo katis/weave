@@ -1,4 +1,4 @@
-const classProvider: unique symbol = Symbol("weave.classProvider");
+export const classProvider: unique symbol = Symbol("weave.classProvider");
 
 export type Providers = Record<string, Provider>;
 
@@ -34,9 +34,14 @@ export type HasClassProvider = {
   readonly [classProvider]: true;
 };
 
+/**
+ * Mixin that allows a class to be used as a Provider with `weave`,
+ * takes a base class parameter that the returned class will inherit from
+ */
 export function Provider<B extends new (...args: any[]) => any>(
   Base: B
 ): B & HasClassProvider;
+/** Mixin that allows a class to be used as a Provider with `weave` */
 export function Provider(): (new () => object) & HasClassProvider;
 export function Provider(base: new (...args: any[]) => any = Object): any {
   return class Injectable extends base {
