@@ -1,5 +1,3 @@
-export const classProvider: unique symbol = Symbol("weave.classProvider");
-
 export type Providers = Record<string, Provider>;
 
 export type Resolved<D extends Providers> = {
@@ -28,10 +26,11 @@ export type ClassProvider<D, R> = HasClassProvider & {
 
 export const isClassProvider = (
   provider: Provider
-): provider is ClassProvider<any, any> => classProvider in provider;
+): provider is ClassProvider<any, any> =>
+  "isClassProvider" in provider && provider.isClassProvider;
 
 export type HasClassProvider = {
-  readonly [classProvider]: true;
+  readonly isClassProvider: true;
 };
 
 /**
@@ -45,7 +44,7 @@ export function Provider<B extends new (...args: any[]) => any>(
 export function Provider(): (new () => object) & HasClassProvider;
 export function Provider(base: new (...args: any[]) => any = Object): any {
   return class Injectable extends base {
-    static get [classProvider]() {
+    static get isClassProvider() {
       return true;
     }
   };

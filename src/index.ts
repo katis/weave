@@ -5,7 +5,7 @@ export type {
   FullyResolved,
   ProviderParams,
 } from "./weave";
-export { Provider, classProvider } from "./Providers";
+export { Provider } from "./Providers";
 export type {
   Providers,
   Resolved,
